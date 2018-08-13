@@ -38,6 +38,7 @@ FourVector boost(const FourVector &p, double vx, double vy, double vz)
   return prest;
 }
 
+//calculating the q squared factor in Wigner function
 double Coal_Sampler::q2(FourVector p1, FourVector p2)
 {
     double v_cm_x = (p1.x() + p2.x()) / (p1.t() + p2.t());
@@ -79,6 +80,7 @@ double Coal_Sampler::q22(FourVector p1, FourVector p2, FourVector p3)
     return (q2_x * q2_x + q2_y * q2_y + q2_z * q2_z);
 }
 
+//Calculate the wigner function
 double Coal_Sampler::Wigner(FourVector p1, FourVector p2, double sigma)
 {
     return pow(2. * sqrt(pi) * sigma, 3) * exp(-q2(p1, p2) * pow(sigma, 2));
@@ -89,6 +91,7 @@ double Coal_Sampler::Wigner(FourVector p1, FourVector p2, FourVector p3, double 
     return pow(2. * sqrt(pi) * sigma1, 3) * pow(2. * sqrt(pi) * sigma2, 3) * exp(-q12(p1, p2, p3) * pow(sigma1, 2) - q22(p1, p2, p3) * pow(sigma2, 2));
 }
 
+//Thermal distributions
 double Coal_Sampler::FD_dist(double E, double T)
 {
     return 1. / (exp(E / T) + 1.);
@@ -99,6 +102,7 @@ double Coal_Sampler::BE_dist(double E, double T)
     return 1. / (exp(E / T) - 1.);
 }
 
+//expected number of produced meson/baryon at a certain momentum
 double Coal_Sampler::prob2meson(int light_id, FourVector &p_l, int heavy_id, FourVector &p_h)
 {
     double m_l = mass_dict[light_id];
@@ -113,6 +117,27 @@ double Coal_Sampler::prob2meson(int light_id, FourVector &p_l, int heavy_id, Fou
     ;
 }
 
+double Coal_Sampler::prob2baryon(int light_id1, FourVector &p_l1, int light_id2, FourVector &p_l2, int heavy_id, FourVector &p_h)
+{
+    double m_l1 = mass_dict[light_id1];
+    double m_l2 = mass_dict[light_id2];
+    double m_h = mass_dict[heavy_id];
+    double mu1 = m_l1 * m_l2 / (m_l1 + m_l2);
+    double mu2 = (m_l1 + m_l2) * m_h / (m_l1 + m_l2 + m_h);
+    double sigma1 = 1. / sqrt(mu1 * baryon_omega_dict[heavy_id]);
+    double sigma2 = 1. / sqrt(mu2 * baryon_omega_dict[heavy_id]);
+    double p1 = sqrt(pow(p_l1.x(), 2) + pow(p_l1.y(), 2) + pow(p_l1.z(), 2));
+    double p2 = sqrt(pow(p_l2.x(), 2) + pow(p_l2.y(), 2) + pow(p_l2.z(), 2));    
+    return (
+               gq * FD_dist(p_l1.t(), T) * gq * FD_dist(p_l2.t(), T) +
+               8. / 3. * gg * BE_dist(sqrt(pow(2. * p1, 2) + pow(mass_dict[21], 2)), T) * gq * FD_dist(p_l2.t(), T) +
+               8. / 3. * gg * BE_dist(sqrt(pow(2. * p2, 2) + pow(mass_dict[21], 2)), T) * gq * FD_dist(p_l1.t(), T) +
+               8. / 3. * gg * BE_dist(sqrt(pow(2. * p1, 2) + pow(mass_dict[21], 2)), T) * 8. / 3. * gg * BE_dist(sqrt(pow(2. * p2, 2) + pow(mass_dict[21], 2)), T)) *
+           Wigner(p_l1, p_l2, p_h, sigma1, sigma2);
+           
+}
+
+//ratio of probability for metropolis sampling
 double Coal_Sampler::alpha_meson(int light_id, FourVector &p_l, FourVector &p_lnew, int heavy_id, FourVector &p_h)
 {
     double m_l = mass_dict[light_id];
@@ -157,27 +182,7 @@ double Coal_Sampler::alpha_baryon(int light_id1, FourVector &p_l1, FourVector &p
     return ratio;
 }
 
-double Coal_Sampler::prob2baryon(int light_id1, FourVector &p_l1, int light_id2, FourVector &p_l2, int heavy_id, FourVector &p_h)
-{
-    double m_l1 = mass_dict[light_id1];
-    double m_l2 = mass_dict[light_id2];
-    double m_h = mass_dict[heavy_id];
-    double mu1 = m_l1 * m_l2 / (m_l1 + m_l2);
-    double mu2 = (m_l1 + m_l2) * m_h / (m_l1 + m_l2 + m_h);
-    double sigma1 = 1. / sqrt(mu1 * baryon_omega_dict[heavy_id]);
-    double sigma2 = 1. / sqrt(mu2 * baryon_omega_dict[heavy_id]);
-    double p1 = sqrt(pow(p_l1.x(), 2) + pow(p_l1.y(), 2) + pow(p_l1.z(), 2));
-    double p2 = sqrt(pow(p_l2.x(), 2) + pow(p_l2.y(), 2) + pow(p_l2.z(), 2));    
-    return (
-               gq * FD_dist(p_l1.t(), T) * gq * FD_dist(p_l2.t(), T) +
-               8. / 3. * gg * BE_dist(sqrt(pow(2. * p1, 2) + pow(mass_dict[21], 2)), T) * gq * FD_dist(p_l2.t(), T) +
-               8. / 3. * gg * BE_dist(sqrt(pow(2. * p2, 2) + pow(mass_dict[21], 2)), T) * gq * FD_dist(p_l1.t(), T) +
-               8. / 3. * gg * BE_dist(sqrt(pow(2. * p1, 2) + pow(mass_dict[21], 2)), T) * 8. / 3. * gg * BE_dist(sqrt(pow(2. * p2, 2) + pow(mass_dict[21], 2)), T)) *
-           Wigner(p_l1, p_l2, p_h, sigma1, sigma2);
-           
-}
-
-
+//total probability for a heavy quark with four momentum p_h and one/two light quark to combine
 double Coal_Sampler::mc_integral(int light_id, int heavy_id, FourVector &p_h)
 {
     double sum = 0.;
@@ -210,51 +215,6 @@ double Coal_Sampler::mc_integral(int light_id, int heavy_id, FourVector &p_h)
         sum += prob2meson(light_id, p_l, heavy_id, p_h_fluid);
     }
     return sum / mc_max_iter * pow(pl_max, 3) / pow(2. * pi, 3);
-}
-
-
-FourVector Coal_Sampler::mc_sample(int light_id, int heavy_id, FourVector &p_h)
-{
-    seed = std::chrono::system_clock::now().time_since_epoch().count();
-    std::default_random_engine generator(seed);
-    std::uniform_real_distribution<double> uniform_dist(-pl_max, pl_max);
-    std::uniform_real_distribution<double> ZeroOne_dist(0., 1.);
-    int iter_n = mc_burnin + mc_burnin * ZeroOne_dist(generator);
-    FourVector p_h_fluid = boost(p_h, v_x, v_y, v_z);
-    double m_l = mass_dict[light_id];
-    double p_x = uniform_dist(generator);
-    double p_y = uniform_dist(generator);
-    double p_z = uniform_dist(generator);
-    double p = sqrt(p_x * p_x + p_y * p_y + p_z * p_z);
-    double E_l = sqrt(p * p + m_l * m_l);
-    double jump_width1 = max(p_h_fluid.x(), pl_max);
-    double jump_width2 = max(p_h_fluid.y(), pl_max);
-    double jump_width3 = max(p_h_fluid.z(), pl_max);
-    int jump_count = 0;
-    FourVector p_l(p_x, p_y, p_z, E_l);
-    double alpha;
-    for (int i = 0; i < 2 * mc_burnin; i++)
-    {
-        double tempp_x = p_l.x() + jump_width1 * (ZeroOne_dist(generator) - 0.5);
-        double tempp_y = p_l.y() + jump_width2 * (ZeroOne_dist(generator) - 0.5);
-        double tempp_z = p_l.z() + jump_width3 * (ZeroOne_dist(generator) - 0.5);
-        p = sqrt(tempp_x * tempp_x + tempp_y * tempp_y + tempp_z * tempp_z);
-        E_l = sqrt(p * p + m_l * m_l);
-        FourVector tempp_l(tempp_x, tempp_y, tempp_z, E_l);
-        alpha = alpha_meson(light_id, p_l, tempp_l, heavy_id, p_h_fluid);
-
-        double u = ZeroOne_dist(generator);
-        if (alpha >= 1. || u < alpha)
-        {
-            p_l = tempp_l;
-            jump_count++;
-        }
-        if (i >= iter_n && jump_count > jump_time)
-        {
-            break;
-        }
-    }
-    return p_l;
 }
 
 double Coal_Sampler::mc_integral(int light_id1, int light_id2, int heavy_id, FourVector &p_h)
@@ -299,6 +259,50 @@ double Coal_Sampler::mc_integral(int light_id1, int light_id2, int heavy_id, Fou
     return sum / mc_max_iter * pow(pl_max, 6) / pow(2. * pi, 6);
 }
 
+//sample the light quarks when a certain heavy quark is present
+FourVector Coal_Sampler::mc_sample(int light_id, int heavy_id, FourVector &p_h)
+{
+    seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine generator(seed);
+    std::uniform_real_distribution<double> uniform_dist(-pl_max, pl_max);
+    std::uniform_real_distribution<double> ZeroOne_dist(0., 1.);
+    int iter_n = mc_burnin + mc_burnin * ZeroOne_dist(generator);
+    FourVector p_h_fluid = boost(p_h, v_x, v_y, v_z);
+    double m_l = mass_dict[light_id];
+    double p_x = uniform_dist(generator);
+    double p_y = uniform_dist(generator);
+    double p_z = uniform_dist(generator);
+    double p = sqrt(p_x * p_x + p_y * p_y + p_z * p_z);
+    double E_l = sqrt(p * p + m_l * m_l);
+    double jump_width1 = max(p_h_fluid.x(), pl_max);
+    double jump_width2 = max(p_h_fluid.y(), pl_max);
+    double jump_width3 = max(p_h_fluid.z(), pl_max);
+    int jump_count = 0;
+    FourVector p_l(p_x, p_y, p_z, E_l);
+    double alpha;
+    for (int i = 0; i < 2 * mc_burnin; i++)
+    {
+        double tempp_x = p_l.x() + jump_width1 * (ZeroOne_dist(generator) - 0.5);
+        double tempp_y = p_l.y() + jump_width2 * (ZeroOne_dist(generator) - 0.5);
+        double tempp_z = p_l.z() + jump_width3 * (ZeroOne_dist(generator) - 0.5);
+        p = sqrt(tempp_x * tempp_x + tempp_y * tempp_y + tempp_z * tempp_z);
+        E_l = sqrt(p * p + m_l * m_l);
+        FourVector tempp_l(tempp_x, tempp_y, tempp_z, E_l);
+        alpha = alpha_meson(light_id, p_l, tempp_l, heavy_id, p_h_fluid);
+
+        double u = ZeroOne_dist(generator);
+        if (alpha >= 1. || u < alpha)
+        {
+            p_l = tempp_l;
+            jump_count++;
+        }
+        if (i >= iter_n && jump_count > jump_time)
+        {
+            break;
+        }
+    }
+    return p_l;
+}
 
 FourVector Coal_Sampler::mc_sample(int light_id1, int light_id2, int heavy_id, FourVector &p_h)
 {
@@ -358,6 +362,7 @@ FourVector Coal_Sampler::mc_sample(int light_id1, int light_id2, int heavy_id, F
     return p_l1;
 }
 
+//calculate the total recombination probability
 double Coal_Sampler::recomb_prob(int heavy_id, FourVector &p_h)
 {
     std::vector<int> meson_list;
@@ -383,14 +388,14 @@ double Coal_Sampler::recomb_prob(int heavy_id, FourVector &p_h)
     {
         double temp = gM_dict[pid] * mc_integral(meson_dict[pid], heavy_id, p_h);
         meson_prob.push_back(temp);
-        cout << pid <<" " << temp <<endl;
+        cout << "channel: " << pid << " probability: " << temp <<endl;
         tot_prob += temp;
     }
     for(auto pid : baryon_list)
     {
         double temp = gB_dict[pid] * mc_integral(baryon_dict[pid].first, baryon_dict[pid].second, heavy_id, p_h);
         baryon_prob.push_back(temp);
-        cout << pid <<" " << temp <<endl;
+        cout << "channel: " << pid << " probability: " << temp <<endl;
         tot_prob += temp;
     }
     return tot_prob;
