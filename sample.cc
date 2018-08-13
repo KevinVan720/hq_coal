@@ -1,5 +1,43 @@
 #include "sample.h"
 
+FourVector boost(const FourVector &p, double vx, double vy, double vz)
+{
+  FourVector prest;
+  double px = p.x();
+  double py = p.y();
+  double pz = p.z();
+  double p0 = p.t();
+  double prx, pry, prz, pr0;
+  double beta = sqrt(vx * vx + vy * vy + vz * vz);
+  double gamma;
+  double cosPhi;
+  // Set momentum in fluid cell's frame
+  // 1: for brick
+  if (beta < 1e-10)
+  {
+    gamma = 1.;
+    cosPhi = 1.;
+    prest = p;
+  }
+  // 2: for evolving medium
+  else
+  {
+
+    gamma = 1. / sqrt(1. - beta * beta);
+    cosPhi = (px * vx + py * vy + pz * vz) / (p0 * beta);
+
+    // boost particle to the local rest frame of fluid cell
+    pr0 = p0 * gamma * (1. - beta * cosPhi);
+
+    prx = -vx * gamma * p0 + (1. + (gamma - 1.) * vx * vx / (beta * beta)) * px + (gamma - 1.) * vx * vy / (beta * beta) * py + (gamma - 1.) * vx * vz / (beta * beta) * pz;
+    pry = -vy * gamma * p0 + (1. + (gamma - 1.) * vy * vy / (beta * beta)) * py + (gamma - 1.) * vx * vy / (beta * beta) * px + (gamma - 1.) * vy * vz / (beta * beta) * pz;
+    prz = -vz * gamma * p0 + (1. + (gamma - 1.) * vz * vz / (beta * beta)) * pz + (gamma - 1.) * vx * vz / (beta * beta) * px + (gamma - 1.) * vy * vz / (beta * beta) * py;
+
+    prest = FourVector(prx, pry, prz, pr0);
+  }
+  return prest;
+}
+
 double Coal_Sampler::q2(FourVector p1, FourVector p2)
 {
     double v_cm_x = (p1.x() + p2.x()) / (p1.t() + p2.t());
@@ -358,33 +396,3 @@ double Coal_Sampler::recomb_prob(int heavy_id, FourVector &p_h)
     return tot_prob;
 }
 
-int main(int argc, char **argv)
-{
-    Coal_Sampler sampler(0, 0, 0, 165);
-
-    
-    for (int i = 0; i < 100; i++)
-    {
-        double p_x = 200 * i;
-        FourVector p_h({p_x, 0, 0, sqrt(4200*4200+p_x*p_x)});
-        cout << p_x <<" "<< sampler.recomb_prob(5,p_h) << endl;
-        //cout << p_x <<" "<< sampler.mc_integral(1, 3,  5, p_h) << endl;
-
-    }
-    
-    /*
-    for (int i = 0; i < 100; i++)
-    {
-        double p_xh = strtod(argv[1],NULL);
-        double p_yh = 0.;
-        double p_zh = -30000.;
-        double E_h = sqrt(pow(p_xh, 2) + pow(p_yh, 2) + pow(p_zh, 2) + pow(4200, 2));
-        FourVector p_h(p_xh, p_yh, p_zh, E_h);
-        FourVector p_l = sampler.mc_sample(1, 1, 5, p_h);
-        cout << p_l.x() << " " << p_l.y() << " " << p_l.z() << " " << p_l.t() << endl;
-    }
-    */
-
-
-    return 0;
-}

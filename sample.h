@@ -1,4 +1,7 @@
-#include "math.h"
+#ifndef SAMPLE_H
+#define SAMPLE_H
+
+#include <cmath>
 #include "FourVector.h"
 #include <map>
 #include <random>
@@ -9,54 +12,6 @@ using namespace Jetscape;
 
 #define min(x,y) x > y ? y : x
 #define max(x,y) x > y ? x : y
-
-FourVector boost(const FourVector& p, double vx, double vy, double vz)
-{
-  FourVector prest;
-  double px=p.x();
-  double py=p.y();
-  double pz=p.z();
-  double p0=p.t();
-  double prx,pry,prz,pr0;
-  double beta = sqrt( vx*vx + vy*vy + vz*vz );
-  double gamma;
-  double cosPhi;
-          // Set momentum in fluid cell's frame
-          // 1: for brick
-  if (beta < 1e-10)
-    {
-      gamma = 1.;
-      cosPhi = 1.;
-      prest = p;
-    }
-          // 2: for evolving medium
-  else
-    {
-      
-      gamma  = 1./sqrt( 1. - beta*beta );
-      cosPhi = ( px*vx + py*vy + pz*vz )/( p0*beta );
-
-              // boost particle to the local rest frame of fluid cell
-       pr0 = p0*gamma*( 1. - beta*cosPhi );
-
-       prx = -vx*gamma*p0
-             + (1.+(gamma-1.)*vx*vx/(beta*beta))*px
-             + (gamma-1.)*vx*vy/(beta*beta)*py
-             + (gamma-1.)*vx*vz/(beta*beta)*pz;
-       pry = -vy*gamma*p0
-             + (1.+(gamma-1.)*vy*vy/(beta*beta))*py
-             + (gamma-1.)*vx*vy/(beta*beta)*px
-             + (gamma-1.)*vy*vz/(beta*beta)*pz;
-       prz = -vz*gamma*p0
-             + (1.+(gamma-1.)*vz*vz/(beta*beta))*pz
-             + (gamma-1.)*vx*vz/(beta*beta)*px
-             + (gamma-1.)*vy*vz/(beta*beta)*py;
-
-       prest = FourVector ( prx, pry, prz, pr0 );
-
-    }
-  return prest;
-}
 
 class Coal_Sampler
 {
@@ -98,10 +53,10 @@ class Coal_Sampler
         //model parameters
         gq = 6;
         gg = 16;
-        meson_omega_dict[4] = 330;
-        meson_omega_dict[5] = 330;
-        baryon_omega_dict[4] = 430;
-        baryon_omega_dict[5] = 410;
+        meson_omega_dict[4] = 215;
+        meson_omega_dict[5] = 102;
+        baryon_omega_dict[4] = 215;
+        baryon_omega_dict[5] = 102;
         charm_meson_list = {411, 421, 413, 423, 431, 433};
         bottom_meson_list = {511, 521, 513, 523, 531, 533};
         charm_baryon_list = {4122, 4222, 4112, 4212, 4224, 4114, 4214, 4232, 4132, 4324, 4314, 4332, 4334};
@@ -110,7 +65,7 @@ class Coal_Sampler
         mass_dict[2] = 300;
         mass_dict[3] = 475;
         mass_dict[4] = 1270;
-        mass_dict[5] = 4200;
+        mass_dict[5] = 4190;
         mass_dict[21] = 600;
         mass_dict[411] = 1870;
         mass_dict[421] = 1865;
@@ -220,3 +175,5 @@ class Coal_Sampler
     FourVector mc_sample(int light_id1, int light_id2, int heavy_id, FourVector &p_h);
     double recomb_prob(int heavy_id, FourVector &p_h);
 };
+
+#endif
