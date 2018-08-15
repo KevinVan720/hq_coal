@@ -2,7 +2,8 @@
 
 int main(int argc, char **argv)
 {
-    Coal_Sampler sampler(0, 0, 0, 165);
+    Coal_Sampler sampler;
+    sampler.SetHydro(0., 0., 0., 165.);
 
     for (int i = 0; i < 100; i++)
     {
@@ -13,8 +14,8 @@ int main(int argc, char **argv)
         cout << "--------------------------" << endl;
         cout <<"heavy quark momentum: " << p_x << " " << p_y << " " << p_z << endl;
         double rst = sampler.recomb_prob(4, p_h);
-        cout << "total probability: "<< rst << endl;
-        //cout << p_x <<" "<< sampler.mc_integral(1, 3,  5, p_h) << endl;
+        cout << "total probability: " << rst << endl;
+        //cout << p_x <<" "<< sampler.mc_integral(1, 5, p_h) << endl;
 
     }
 
