@@ -7,6 +7,9 @@
 #include <random>
 #include <chrono>
 #include <utility>
+#include "H5Cpp.h"
+#include <algorithm>
+//#include <boost/filesystem.hpp>
 
 using namespace Jetscape;
 
@@ -34,18 +37,20 @@ class Coal_Sampler
     unsigned seed;
     int gq;
     int gg;
+    /*
     double v_x;
     double v_y;
     double v_z;
     double T;
-    //std::map<int, double> meson_prob;
-    //std::map<int, double> baryon_prob;
+    */
+    std::string fname;
 
   public:
     Coal_Sampler()
     {
       cout << "Initialize..." << endl;
       //MC parameters
+      fname = "recomb_table.h5";
       seed = std::chrono::system_clock::now().time_since_epoch().count();
       mc_max_iter = 10000000;
       mc_burnin = 100000;
@@ -162,6 +167,7 @@ class Coal_Sampler
 
     }
 
+    /*
     void SetHydro(double vx, double vy, double vz, double Thydro)
     {
       v_x = vx;
@@ -170,6 +176,7 @@ class Coal_Sampler
       T = Thydro;
       pl_max = 10. * T;
     }
+    */
     double q2(FourVector p1, FourVector p2);
     double q12(FourVector p1, FourVector p2, FourVector p3);
     double q22(FourVector p1, FourVector p2, FourVector p3);
@@ -177,15 +184,16 @@ class Coal_Sampler
     double Wigner(FourVector p1, FourVector p2, FourVector p3, double sigma1, double sigma2);
     double FD_dist(double E, double T);
     double BE_dist(double E, double T);
-    double prob2meson(int light_id, FourVector &p_l, int heavy_id, FourVector &p_h);
-    double prob2baryon(int light_id1, FourVector &p_l1, int light_id2, FourVector &p_l2, int heavy_id, FourVector &p_h);
-    double alpha_meson(int light_id, FourVector &p_l, FourVector &p_lnew, int heavy_id, FourVector &p_h);
-    double alpha_baryon(int light_id1, FourVector &p_l1, FourVector &p_l1new, int light_id2, FourVector &p_l2, FourVector &p_l2new, int heavy_id, FourVector &p_h);
-    double mc_integral(int light_id, int heavy_id, FourVector &p_h);
-    double mc_integral(int light_id1, int light_id2, int heavy_id, FourVector &p_h);
-    FourVector mc_sample(int light_id, int heavy_id, FourVector &p_h);
-    FourVector mc_sample(int light_id1, int light_id2, int heavy_id, FourVector &p_h);
-    double recomb_prob(int heavy_id, FourVector &p_h);
+    double prob2meson(int light_id, FourVector &p_l, int heavy_id, FourVector &p_h, double T);
+    double prob2baryon(int light_id1, FourVector &p_l1, int light_id2, FourVector &p_l2, int heavy_id, FourVector &p_h, double T);
+    double alpha_meson(int light_id, FourVector &p_l, FourVector &p_lnew, int heavy_id, FourVector &p_h, double T);
+    double alpha_baryon(int light_id1, FourVector &p_l1, FourVector &p_l1new, int light_id2, FourVector &p_l2, FourVector &p_l2new, int heavy_id, FourVector &p_h, double T);
+    double mc_integral(int light_id, int heavy_id, FourVector &p_h, double v_x, double v_y, double v_z, double T);
+    double mc_integral(int light_id1, int light_id2, int heavy_id, FourVector &p_h, double v_x, double v_y, double v_z, double T);
+    FourVector mc_sample(int light_id, int heavy_id, FourVector &p_h, double v_x, double v_y, double v_z, double T);
+    FourVector mc_sample(int light_id1, int light_id2, int heavy_id, FourVector &p_h, double v_x, double v_y, double v_z, double T);
+    double recomb_prob(int heavy_id, FourVector &p_h, double v_x, double v_y, double v_z, double T);
+    void SaveTable(int pid);
 };
 
 #endif

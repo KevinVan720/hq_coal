@@ -3,8 +3,8 @@
 int main(int argc, char **argv)
 {
     Coal_Sampler sampler;
-    sampler.SetHydro(0., 0., 0., 165.);
 
+/*
     for (int i = 0; i < 100; i++)
     {
         double p_x = 200 * i;
@@ -18,6 +18,7 @@ int main(int argc, char **argv)
         //cout << p_x <<" "<< sampler.mc_integral(1, 5, p_h) << endl;
 
     }
-
+*/
+    sampler.SaveTable(411);
     return 0;
 }
