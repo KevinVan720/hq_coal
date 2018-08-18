@@ -57,11 +57,11 @@ class Coal_Sampler
       fname = "recomb_table.h5";
       seed = std::chrono::system_clock::now().time_since_epoch().count();
       mc_max_iter = 10000000;
-      mc_burnin = 100000;
+      mc_burnin = 50000;
       jump_time = 100;
       T_start = 150;
-      T_N =25;
-      p_N = 1000;
+      T_N =10;
+      p_N = 50;
       //model parameters
       gq = 6;
       gg = 16;

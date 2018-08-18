@@ -450,7 +450,7 @@ void Coal_Sampler::SaveTable(int pid)
         {
             double Ttemp = 165. + i * 2.;
             SetHydro(0, 0, 0, Ttemp);
-            double p = j * 1000.;
+            double p = j * 400.;
             double E = sqrt(p*p+mass_dict[heavy_id]*mass_dict[heavy_id]);
             FourVector p_h(p, 0, 0, E);
             if(is_meson)
